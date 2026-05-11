@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>محرر شامل صور + أصوات</title>
+
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+    margin:20px;
+    background:#f5f5f5;
+}
+
+textarea{
+    width:90%;
+    height:220px;
+    padding:10px;
+    font-family:monospace;
+    direction:ltr;
+}
+
+button{
+    padding:10px 15px;
+    margin:5px;
+    cursor:pointer;
+    font-size:15px;
+}
+
+iframe{
+    width:90%;
+    height:350px;
+    border:2px solid #888;
+    margin-top:15px;
+    background:white;
+}
+
+#info{
+    margin-top:10px;
+    font-size:16px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🧠 محرر شامل صور + أصوات</h2>
+
+<textarea id="codeBox">
+<h1>تجربة</h1>
+
+<img src="img1.png">
+
+<audio controls src="sound.mp3"></audio>
+</textarea>
+
+<br>
+
+<!-- زر الصور -->
+<button onclick="document.getElementById('imgInput').click()">
+📷 اختيار صور
+</button>
+
+<!-- زر الصوت -->
+<button onclick="document.getElementById('audioInput').click()">
+🔊 اختيار صوت
+</button>
+
+<button onclick="runCode()">
+▶ تشغيل
+</button>
+
+<button onclick="downloadHTML()">
+📥 تحميل HTML
+</button>
+
+<input type="file" id="imgInput" accept="image/*" multiple hidden>
+
+<input type="file" id="audioInput"
+accept=".mp3,.wav,.ogg,audio/*" hidden>
+
+<p id="info">لا توجد ملفات مختارة</p>
+
+<iframe id="frame"></iframe>
+
+<script>
+
+let images = [];
+let audios = [];
+let finalCode = "";
+
+// اختيار الصور
+document.getElementById("imgInput")
+.addEventListener("change", function(e){
+
+    const files = [...e.target.files];
+
+    files.forEach(file => {
+
+        const reader = new FileReader();
+
+        reader.onload = function(ev){
+
+            images.push({
+                name: file.name,
+                data: ev.target.result
+            });
+
+            document.getElementById("info").innerHTML +=
+                "📷 " + file.name + "<br>";
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+});
+
+// اختيار الصوت
+document.getElementById("audioInput")
+.addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(ev){
+
+        audios.push({
+            name: file.name,
+            data: ev.target.result
+        });
+
+        document.getElementById("info").innerHTML +=
+            "🔊 " + file.name + "<br>";
+    };
+
+    reader.readAsDataURL(file);
+
+});
+
+// تشغيل
+function runCode(){
+
+    let code = document.getElementById("codeBox").value;
+
+    // استبدال الصور
+    images.forEach(img => {
+
+        const regex = new RegExp(
+            `src=["']${img.name}["']`,
+            "g"
+        );
+
+        code = code.replace(
+            regex,
+            `src="${img.data}"`
+        );
+
+    });
+
+    // استبدال الأصوات
+    audios.forEach(audio => {
+
+        const regex = new RegExp(
+            `src=["']${audio.name}["']`,
+            "g"
+        );
+
+        code = code.replace(
+            regex,
+            `src="${audio.data}"`
+        );
+
+    });
+
+    finalCode = `
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+</head>
+<body style="font-family:Arial;text-align:center;">
+${code}
+</body>
+</html>
+`;
+
+    document.getElementById("frame").srcdoc =
+        finalCode;
+}
+
+// تحميل
+function downloadHTML(){
+
+    if(!finalCode){
+        alert("شغل الكود أولاً");
+        return;
+    }
+
+    const blob = new Blob(
+        [finalCode],
+        {type:"text/html"}
+    );
+
+    const link = document.createElement("a");
+
+    link.href = URL.createObjectURL(blob);
+
+    link.download = "project.html";
+
+    link.click();
+}
+
+</script>
+
+</body>
+</html>
